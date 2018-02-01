@@ -1,0 +1,29 @@
+#add_users.ldif
+dn: ou=People,dc=example,dc=org
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Groups,dc=example,dc=org
+objectClass: organizationalUnit
+ou: Groups
+
+dn: uid=kennedy,ou=People,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: kennedy
+sn: Kennedy
+givenName: Matt
+cn: Matt Kennedy
+displayName: Matt Kennedy
+uidNumber: 10000
+gidNumber: 5000
+userPassword: tinkerbell
+gecos: Matt Kennedy,remote,7035825017,matt.kennedy@example.com
+loginShell: /bin/bash
+homeDirectory: /home/kennedy
+
+dn: cn=killrdevs,ou=Groups,dc=example,dc=org
+objectClass: groupOfUniqueNames
+cn: killrdevs
+uniquemember: uid=kennedy,ou=People,dc=example,dc=org
