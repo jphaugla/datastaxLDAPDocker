@@ -1,0 +1,94 @@
+version: '2'
+services:
+  opscenter:
+    image: "datastax/dse-opscenter"
+    container_name: "opscenter"
+    hostname: opsc
+    domainname: example.org
+    restart: always
+    ports:
+      - 8888:8888
+    environment:
+      - DS_LICENSE=accept
+    volumes:
+      - ./conf/opscenter:/config
+      - ./opscenter:/var/lib/opscenter
+      - ./opscenter-clusters:/opt/opscenter/conf/clusters
+  main_node:
+    image: "store/datastax/dse-server:5.1.5"
+    container_name: "dse"
+    hostname: dse
+    domainname: example.org
+    ports:
+      - 9042:9042
+    environment:
+      - DS_LICENSE=accept
+      - CLUSTER_NAME=main
+    # Allow DSE to lock memory with mlock
+    cap_add:
+    - IPC_LOCK
+    ulimits:
+      memlock: -1
+    links:
+      - opscenter
+      - openldap
+    volumes:
+      - ./data:/var/lib/cassandra/data
+      - ./conf:/config
+      - ./logs:/var/lib/cassandra/commit_logs
+      - ./cache:/var/lib/cassandra/saved_caches
+  openldap:
+    image: osixia/openldap:1.1.11
+    container_name: openldap
+    hostname: openldap
+    domainname: example.org
+    environment:
+      LDAP_LOG_LEVEL: "256"
+      LDAP_ORGANISATION: "Example Inc."
+      LDAP_DOMAIN: "example.org"
+      LDAP_BASE_DN: ""
+      LDAP_ADMIN_PASSWORD: "admin"
+      LDAP_CONFIG_PASSWORD: "config"
+      LDAP_READONLY_USER: "false"
+      #LDAP_READONLY_USER_USERNAME: "readonly"
+      #LDAP_READONLY_USER_PASSWORD: "readonly"
+      LDAP_RFC2307BIS_SCHEMA: "false"
+      LDAP_BACKEND: "hdb"
+      LDAP_TLS: "true"
+      LDAP_TLS_CRT_FILENAME: "ldap.crt"
+      LDAP_TLS_KEY_FILENAME: "ldap.key"
+      LDAP_TLS_CA_CRT_FILENAME: "ca.crt"
+      LDAP_TLS_ENFORCE: "false"
+      LDAP_TLS_CIPHER_SUITE: "SECURE256:-VERS-SSL3.0"
+      LDAP_TLS_PROTOCOL_MIN: "3.1"
+      LDAP_TLS_VERIFY_CLIENT: "demand"
+      LDAP_REPLICATION: "false"
+      #LDAP_REPLICATION_CONFIG_SYNCPROV: "binddn="cn=admin,cn=config" bindmethod=simple credentials=$LDAP_CONFIG_PASSWORD searchbase="cn=config" type=refreshAndPersist retry="60 +" timeout=1 starttls=critical"
+      #LDAP_REPLICATION_DB_SYNCPROV: "binddn="cn=admin,$LDAP_BASE_DN" bindmethod=simple credentials=$LDAP_ADMIN_PASSWORD searchbase="$LDAP_BASE_DN" type=refreshAndPersist interval=00:00:00:10 retry="60 +" timeout=1 starttls=critical"
+      #LDAP_REPLICATION_HOSTS: "#PYTHON2BASH:['ldap://ldap.example.org','ldap://ldap2.example.org']"
+      KEEP_EXISTING_CONFIG: "false"
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: "true"
+      LDAP_SSL_HELPER_PREFIX: "ldap"
+    tty: true
+    stdin_open: true
+    volumes:
+      - /var/lib/ldap
+      - /etc/ldap/slapd.d
+      - /container/service/slapd/assets/certs/
+    ports:
+      - "389:389"
+      - "636:636"
+    domainname: "example.org" # important: same as hostname
+    hostname: "example.org"
+  phpldapadmin:
+    image: osixia/phpldapadmin:latest
+    hostname: phpldap
+    domainname: example.org
+    container_name: phpldapadmin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "8080:80"
+    depends_on:
+      - openldap
