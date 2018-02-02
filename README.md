@@ -112,6 +112,7 @@ This tutorial provides specific commands for this environment, so it shouldn't b
     ```
     docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org" -H ldap://openldap    
     ```
+ 9. Additional users can be added using ldif file such as provided add_matt.ldif using a similar ldapadd command as in step 7 above.
 
 ## Configure DSERoleManager to Enable DSE + LDAP Roles
 

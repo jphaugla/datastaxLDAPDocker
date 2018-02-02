@@ -1,0 +1,21 @@
+#add_mcfadin.ldif
+dn: uid=mcfadin,ou=People,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: mcfadin
+sn: McFadin
+givenName: Patrick
+cn: Patrick McFadin
+displayName: Patrick McFadin
+uidNumber: 10001
+gidNumber: 5000
+userPassword: ariel
+gecos: Patrick McFadin,remote,7079748575,patrick@example.org
+loginShell: /bin/bash
+homeDirectory: /home/mcfadin
+
+dn: cn=killrdevs,ou=Groups,dc=example,dc=org
+changetype: modify
+add: uniquemember
+uniquemember: uid=mcfadin,ou=People,dc=example,dc=org
