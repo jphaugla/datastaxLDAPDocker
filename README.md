@@ -15,7 +15,7 @@ The DataStax images are well documented at this github location  [https://github
 ## Getting Started
 1. Prepare Docker environment
 2. Pull this github into a directory  `git clone https://github.com/jphaugla/datastaxLDAPDocker.git`
-3. Follow notes from DataStax Docker github to pull the needed DataStax images.  Directions are here:  [https://github.com/datastax/docker-images/#datastax-platform-overview]().  Don't get too bogged down here.  The pull command is provided with this github in pull.sh. It is requried to have the docker login complete before running the pull.  The also included docker-compose.yaml handles most everything else.
+3. Follow notes from DataStax Docker github to pull the needed DataStax images.  Directions are here:  [https://github.com/datastax/docker-images/#datastax-platform-overview]().  Don't get too bogged down here.  The pull command is provided with this github in pull.sh. It is requried to have the docker login and subscription complete before running the pull.  The also included docker-compose.yaml handles most everything else.
 4. Open terminal, then: `docker-compose up -d`
 5. Verify LDAP is functioning `docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org"`  This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
 6. Also, can login to the phpldadmin using a browser enter `localhost:8080`  For login credentials use "Login DN":  
@@ -109,7 +109,7 @@ This tutorial provides specific commands for this environment, so it shouldn't b
 7. To allow for memberof_search search type, enable memberof for the ldap server.
     ```
     docker cp memberof2.ldif openldap:/root
-    docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/memberof2.ldif`    
+    docker exec openldap ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /root/memberof2.ldif`    
     ```
 8. Add an LDAP user by copying the ldif file to the container and then running ldapadd.  This adds the directory_search style group killrdevs for ldap 
 `docker cp add_kennedy.ldif openldap:/root`
@@ -126,7 +126,7 @@ This tutorial provides specific commands for this environment, so it shouldn't b
     docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_john_doe.ldif
     ``` 
  12. Use an ldapsearch to ensure member of is set
- `docker exec openldap ldapsearch -x -LLL -w public -D cn=admin,dc=example,dc=org -H ldap:/// -b dc=example,dc=org memberof`
+ `docker exec openldap ldapsearch -x -LLL -w admin -D cn=admin,dc=example,dc=org -H ldap:/// -b dc=example,dc=org memberof`
 
 ## Configure DSERoleManager to Enable DSE + LDAP Roles
 
@@ -137,12 +137,13 @@ This tutorial provides specific commands for this environment, so it shouldn't b
     docker cp killrdevs.cql dse:/opt/dse
     docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/killrdevs.cql
     ```  
-2. Finally, log in as the *kennedy* user successfully: `docker exec dse cqlsh -u kennedy -p tinkerbell -e "select * from demo.solr"`
+2. Finally, log in as the *kennedy* user successfully  : `docker exec dse cqlsh -u kennedy -p tinkerbell -e "select * from demo.solr"`
 3. For memberof_search create mygroup cassandra role:
   ```
     docker cp mygroup.cql dse:/opt/dse
     docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/mygroup.cql
     ``` 
+4. Log in as the *john* user successfully  : `docker exec dse cqlsh -u john -p public -e "select * from demo.solr"`
 
 ## Conclusion
 At this point, DSE and LDAP are connected such that user management is much easier than it has been before. We can use internal Cassandra auth for the app-tier or for dev/test users that really have no business in an LDAP. LDAP can be used for real human user's accounts using any groups that an individual belongs to, or that have been created for use with DSE. The only additional overhead that the DSE admin has is to create a role name matching an LDAP group assignment and to assign appropriate permissions to that role. This results in a far more manageable permissions catalog inside of DSE as compared to releases prior to 5.0.
