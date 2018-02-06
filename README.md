@@ -125,6 +125,8 @@ This tutorial provides specific commands for this environment, so it shouldn't b
     docker cp add_john_doe.ldif openldap:/root
     docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_john_doe.ldif
     ``` 
+ 12. Use an ldapsearch to ensure member of is set
+ `docker exec openldap ldapsearch -x -LLL -w public -D cn=admin,dc=example,dc=org -H ldap:/// -b dc=example,dc=org memberof`
 
 ## Configure DSERoleManager to Enable DSE + LDAP Roles
 
