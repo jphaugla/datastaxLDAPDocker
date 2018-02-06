@@ -123,7 +123,7 @@ kerberos_options:
 # is configured as the authenticator in cassandra.yaml
 
 ldap_options:
-    server_host: 172.20.0.3
+    server_host: 172.20.0.2
 #
 #     # Port to use to connect to the LDAP server. This is normally 389 for unencrypted
 #     # connections and 636 for ssl encrypted connections. If use_tls is set to true, use the
@@ -160,7 +160,8 @@ ldap_options:
 #     #                        group_search_filter to filter the results
 #     #     memberof_search  - will get groups from the memberof attribute of the user. This
 #     #                        requires the directory server to have memberof support
-    group_search_type: directory_search
+    group_search_type: memberof_search
+#    group_search_type: directory_search
     group_search_base: ou=Groups,dc=example,dc=org
     group_search_filter: (uniquemember={0})
 #

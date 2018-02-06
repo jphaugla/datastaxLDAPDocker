@@ -1,0 +1,23 @@
+dn: uid=john,ou=People,dc=example,dc=org
+cn: John Doe
+givenName: John
+sn: Doe
+uid: john
+uidNumber: 5000
+gidNumber: 10000
+homeDirectory: /home/john
+mail: john.doe@example.org
+objectClass: top
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+loginShell: /bin/bash
+userPassword: {SHA}YcmysX23eieEG77qv/kjRIsPY4g=
+
+dn: cn=mygroup,ou=Groups,dc=example,dc=org
+objectClass: groupofnames
+cn: mygroup
+description: All users
+member: uid=john,ou=People,dc=example,dc=org
