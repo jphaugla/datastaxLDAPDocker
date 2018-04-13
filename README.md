@@ -120,8 +120,8 @@ Continue to Edit the dse.yaml (~line 130) by uncommenting the following lines an
 6. Check logs as you go!  `docker logs dse`
 7. To allow for memberof_search search type, enable memberof for the ldap server.
 ```bash
-    docker cp memberof2.ldif openldap:/root;
-    docker exec openldap ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /root/memberof2.ldif`    
+docker cp memberof2.ldif openldap:/root;
+docker exec openldap ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /root/memberof2.ldif
 ```
 8. Add an LDAP user by copying the ldif file to the container and then running ldapadd.  This adds the directory_search style group killrdevs for ldap 
 ```bash
