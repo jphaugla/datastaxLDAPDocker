@@ -53,6 +53,14 @@ max_memory_to_lock_fraction: 0.20
 #                authentication is successful, the user is logged in. If the
 #                authentication fails, an authentication error is returned. If no
 #                credentials are passed, the user is logged in as anonymous
+# authentication_options:
+#     enabled: false
+#     default_scheme: internal
+#     allow_digest_with_kerberos: true
+#     plain_text_without_ssl: warn
+#     transitional_mode: disabled
+#     other_schemes:
+#     scheme_permissions: false
 authentication_options:
     enabled: true
     default_scheme: internal
@@ -74,6 +82,8 @@ authentication_options:
 #              using the GRANT ROLE and REVOKE ROLE statements
 #   ldap - the granting and revoking of roles is managed by an external
 #          LDAP server configured using the ldap_options.
+# role_management_options:
+#     mode: internal
 role_management_options:
     mode: ldap
 
@@ -92,10 +102,13 @@ role_management_options:
 #                users
 #   allow_row_level_security - In order for row level security to be used, this must be set to allow it
 #                              for the entire system. true or false
+# authorization_options:
+#     enabled: false
+#     transitional_mode: disabled
+#     allow_row_level_security: false
 authorization_options:
     enabled: true
     transitional_mode: disabled
-#     allow_row_level_security: false
 
 ##########################
 # Kerberos options
@@ -123,33 +136,48 @@ kerberos_options:
 # is configured as the authenticator in cassandra.yaml
 
 ldap_options:
-    server_host: 172.20.0.2
-#
-#     # Port to use to connect to the LDAP server. This is normally 389 for unencrypted
-#     # connections and 636 for ssl encrypted connections. If use_tls is set to true, use the
-#     # unencrypted port
+    server_host: openldap
     server_port: 389
-#
-#     # The distinguished name (DN) of the user that is used to search for other users on the
-#     # LDAP server. This user should have only the necessary permissions to do the search
-#     # If not present then an anonymous bind is used for the search
     search_dn: cn=admin,dc=example,dc=org
-#
-#     # Password of the search user
     search_password: admin
-#
-#     # Set to true to use an SSL encrypted connection. In this case the server_port needs
-#     # to be set to the LDAP port for the server
     use_ssl: false
-#
-#     # Set to true to initiate a TLS encrypted connection on the default ldap port
     use_tls: false
-#
     truststore_path:
     truststore_password:
     truststore_type: jks
     user_search_base: ou=People,dc=example,dc=org
     user_search_filter: (uid={0})
+    group_search_type: directory_search
+    #group_search_type: memberof_search
+    group_search_base: ou=Groups,dc=example,dc=org
+    group_search_filter: (uniquemember={0})
+    group_name_attribute: cn
+    credentials_validity_in_ms: 0
+    search_validity_in_seconds: 0
+    connection_pool:
+        max_active: 2
+        max_idle: 2
+#
+#     # The distinguished name (DN) of the user that is used to search for other users on the
+#     # LDAP server. This user should have only the necessary permissions to do the search
+#     # If not present then an anonymous bind is used for the search
+#     search_dn:
+#
+#     # Password of the search user
+#     search_password:
+#
+#     # Set to true to use an SSL encrypted connection. In this case the server_port needs
+#     # to be set to the LDAP port for the server
+#     use_ssl: false
+#
+#     # Set to true to initiate a TLS encrypted connection on the default ldap port
+#     use_tls: false
+#
+#     truststore_path:
+#     truststore_password:
+#     truststore_type: jks
+#     user_search_base:
+#     user_search_filter: (uid={0})
 #
 #     # Set to the attribute on the user entry containing group membership information.
 #     user_memberof_attribute: memberof
@@ -160,24 +188,23 @@ ldap_options:
 #     #                        group_search_filter to filter the results
 #     #     memberof_search  - will get groups from the memberof attribute of the user. This
 #     #                        requires the directory server to have memberof support
-    group_search_type: memberof_search
-#    group_search_type: directory_search
-    group_search_base: ou=Groups,dc=example,dc=org
-    group_search_filter: (uniquemember={0})
+#     group_search_type: directory_search
+#     group_search_base:
+#     group_search_filter: (uniquemember={0})
 #
 #     # The attribute in the group entry that holds the group name.
-    group_name_attribute: cn
+#     group_name_attribute: cn
 #
 #     # Validity period for the credentials cache in milli-seconds (remote bind is an expensive
 #     # operation). Defaults to 0, set to 0 to disable.
-    credentials_validity_in_ms: 0
+#     credentials_validity_in_ms: 0
 #
 #     # Validity period for the search cache in seconds. Defaults to 0, set to 0 to disable.
-    search_validity_in_seconds: 0
+#     search_validity_in_seconds: 0
 #
-    connection_pool:
-        max_active: 2
-        max_idle: 2
+#     connection_pool:
+#         max_active: 8
+#         max_idle: 8
 
 # To ensure that records with TTLs are purged from DSE Search indexes when they expire, DSE
 # periodically checks all indexes for expired documents and deletes them. These settings

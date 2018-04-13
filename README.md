@@ -27,7 +27,7 @@ docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=
 This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
 6. Also, can login to the phpldadmin using a browser enter `localhost:8080`  For login credentials use "Login DN":  
 `cn=admin,dc=example,dc=org` and "password": `admin`
-7. Verify DataStax is working 
+7. Verify DataStax is working (may take a minute for datastax cassandra to startup so be patient)
 ```bash
 docker exec dse cqlsh -u cassandra -p cassandra -e "desc keyspaces"
 ```
@@ -37,6 +37,10 @@ docker exec dse cqlsh -u cassandra -p cassandra -e "desc keyspaces"
 docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/demos/solr_stress/resources/schema/create_table.cql
 ```
 10. Also note, in the home directory for the github repository directory the docker volumes should be created as subdirectories.  To manipulate the dse.yaml file and add the LDAP authentication the local conf subdirectory will be used.  The other dse directories are logs, cache and data.
+11. Verify the table was created
+```bash
+docker exec dse cqlsh -e "desc demo.solr"
+```
 
 ## Enable DSE Advanced Security
 
@@ -45,15 +49,6 @@ The general instructions for starting the DSE Advanced security set up are here:
 
 This tutorial provides specific commands for this environment, so it shouldn't be necessary to refer to the docs, but they are a handy reference if something goes awry.  Note, the group for LDAP role authentication can be set up using a Directory Group Search or using a member of Group lookup.  The dse.yaml is configured to use both with a one line toggle to change between the two.
 
-1. Get the IP address of the DataStax and openldap servers by running:
-```bash
-export DSE_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dse)
-```
-   and:
-```bash
-export LDAP_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' openldap)
-```
-use `echo $DSE_IPE` and `echo $LDAP_IP` to view
 
 2. Get a local copy of the dse.yaml file from the dse container or use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 5.1.6 and may not work in subsequent versions.  Also provided in the github is a diff file called dse.yaml.diff.   To use github dse.yaml that is already modified, don't run the following command and skip subsequent step 3.  To follow step 3, get the clean dse.yaml file.
 
@@ -87,10 +82,30 @@ authorization_options:
     enabled: true
     transitional_mode: disabled
 ```
-    Continue to Edit dse.yaml using the $LDAP_ID retrieved in Step 1 as the IP Address for the server host below  (~line 124-125):
+    Continue to Edit dse.yaml using openldap server host below  (~line 124-125):
 ```yaml
  ldap_options:
-    server_host: dse
+    server_host: openldap
+    server_port: 389
+    search_dn: cn=admin,dc=example,dc=org
+    search_password: admin
+    use_ssl: false
+    use_tls: false
+    truststore_path:
+    truststore_password:
+    truststore_type: jks
+    user_search_base: ou=People,dc=example,dc=org
+    user_search_filter: (uid={0})
+    group_search_type: directory_search
+    #group_search_type: memberof_search
+    group_search_base: ou=Groups,dc=example,dc=org
+    group_search_filter: (uniquemember={0})
+    group_name_attribute: cn
+    credentials_validity_in_ms: 0
+    search_validity_in_seconds: 0
+    connection_pool:
+        max_active: 2
+        max_idle: 2
 ```
 Continue to Edit the dse.yaml (~line 130) by uncommenting the following lines and adding content.  This is the point where a choice can be made between the group search type:
 ```yaml
@@ -151,7 +166,7 @@ docker exec openldap ldapsearch -x -LLL -w admin -D cn=admin,dc=example,dc=org -
 docker cp killrdevs.cql dse:/opt/dse;
 docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/killrdevs.cql
 ```  
-2. Finally, log in as the *kennedy* user successfully  : 
+2. Remember, *kennedy* is set up to login successfully using directory_search which and we are set up to use directory_search.  So, log in as the *kennedy* user successfully  : 
 ```bash
 docker exec dse cqlsh -u kennedy -p tinkerbell -e "select * from demo.solr"
 ```
@@ -160,10 +175,29 @@ docker exec dse cqlsh -u kennedy -p tinkerbell -e "select * from demo.solr"
 docker cp mygroup.cql dse:/opt/dse;
 docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/mygroup.cql
 ``` 
-4. Log in as the *john* user successfully  : 
+4. Log in as the *john* user.  However, this will not work as the dse.yaml is set for directory_search: 
 ```bash
 docker exec dse cqlsh -u john -p public -e "select * from demo.solr"
 ```
+5. Edit the conf/dse.yaml file to use:
+```yaml
+    #group_search_type: directory_search
+    group_search_type: memberof_search
+```
+6.  Restart dse with `docker restart dse` and rereun steps 2 and 4.  Now john and kennedy will both be successfulu.
 
 ## Conclusion
 At this point, DSE and LDAP are connected such that user management is much easier than it has been before. We can use internal Cassandra auth for the app-tier or for dev/test users that really have no business in an LDAP. LDAP can be used for real human user's accounts using any groups that an individual belongs to, or that have been created for use with DSE. The only additional overhead that the DSE admin has is to create a role name matching an LDAP group assignment and to assign appropriate permissions to that role. This results in a far more manageable permissions catalog inside of DSE as compared to releases prior to 5.0.
+
+##  Additional Notes/tips
+
+* To get the IP address of the DataStax and openldap:
+
+```bash
+export DSE_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dse)
+```
+   and:
+```bash
+export LDAP_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' openldap)
+```
+* use `echo $DSE_IPE` and `echo $LDAP_IP` to view
