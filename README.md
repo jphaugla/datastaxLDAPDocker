@@ -63,7 +63,7 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
 3. Edit local copy of the dse.yaml being extremely careful to maintain the correct spaces as the yaml is space aware.   Thankfully, any errors are obvious in /var/log/cassandra/system.log on startup failure (~line 56 - 63):
 
     ```yaml
-    authentication_options:
+authentication_options:
     enabled: true
     default_scheme: internal
     allow_digest_with_kerberos: true
@@ -73,18 +73,17 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
       - ldap
     scheme_permissions: true
     ```
-    
     Continue to Edit dse.yaml (~line 76-77):
     
     ```yaml
-    role_management_options:
+role_management_options:
     mode: ldap
     ```
     
     Continue to Edit dse.yaml (~line 94-96):
     
     ```yaml
-    authorization_options:
+authorization_options:
     enabled: true
     transitional_mode: disabled
     ```
@@ -93,7 +92,7 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
     
     ```yaml
  ldap_options:
-    server_host: 172.20.0.3
+    server_host: dse
     ```
     
     Continue to Edit the dse.yaml (~line 130) by uncommenting the following lines and adding content.  This is the point where a choice can be made between the group search type:
@@ -125,7 +124,7 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
 6. Check logs as you go!  `docker logs dse`
 7. To allow for memberof_search search type, enable memberof for the ldap server.
     ```bash
-    docker cp memberof2.ldif openldap:/root
+    docker cp memberof2.ldif openldap:/root;
     docker exec openldap ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /root/memberof2.ldif`    
     ```
 8. Add an LDAP user by copying the ldif file to the container and then running ldapadd.  This adds the directory_search style group killrdevs for ldap 
@@ -153,7 +152,6 @@ docker exec openldap ldapsearch -x -LLL -w admin -D cn=admin,dc=example,dc=org -
 
 
 1.  Create killrdevs cassandra role:
-
     ```bash
     docker cp killrdevs.cql dse:/opt/dse;
     docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/killrdevs.cql
