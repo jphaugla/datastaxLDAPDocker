@@ -4,26 +4,35 @@
 
 This github covers setting up a DataStax Docker container with UnifiedAuthentication using a combination of *LDAP* and *DataStax Internal* authentication schemes. LDAP users can log in to DataStax with their role assignments also being fetched from the LDAP.  Two main docker containers are used:  openldap and DataStax Server.  A third container, phpldapadmin, is not necessary but helpful.  The fourth container, DataStax opscenter, is also not needed for this demo.
 
-If you're looking for a tutorial for setting up LDAP with OpsCenter, have a look here: [https://gist.github.com/gmflau/2c5b1939f3df3a7e6bb2554733c7310e](LDAP with DataStax OpsCenter)
+If you're looking for a tutorial for setting up LDAP with OpsCenter, have a look here: [OpCenter LDAP](https://gist.github.com/gmflau/2c5b1939f3df3a7e6bb2554733c7310e)
 
-This github was created using a VM tutorial created by Matt Kennedy.  [https://git.io/v6JKb]()
+This github was created using a VM tutorial created by Matt Kennedy.  [LDAP DataStax VM tutorial](https://git.io/v6JKb)
 
-The DataStax images are well documented at this github location  [https://github.com/datastax/docker-images/]()
+The DataStax images are well documented at this github location  [https://github.com/datastax/docker-images/](https://github.com/datastax/docker-images/)
 
 
 
 ## Getting Started
 1. Prepare Docker environment
-2. Pull this github into a directory  `git clone https://github.com/jphaugla/datastaxLDAPDocker.git`
-3. Follow notes from DataStax Docker github to pull the needed DataStax images.  Directions are here:  [https://github.com/datastax/docker-images/#datastax-platform-overview]().  Don't get too bogged down here.  The pull command is provided with this github in pull.sh. It is requried to have the docker login and subscription complete before running the pull.  The also included docker-compose.yaml handles most everything else.
+2. Pull this github into a directory  
+```bash
+git clone https://github.com/jphaugla/datastaxLDAPDocker.git
+```
+3. Follow notes from DataStax Docker github to pull the needed DataStax images.  Directions are here:  [https://github.com/datastax/docker-images/#datastax-platform-overview](https://github.com/datastax/docker-images/#datastax-platform-overview).  Don't get too bogged down here.  The pull command is provided with this github in pull.sh. It is requried to have the docker login and **subscription** complete before running the pull.  The also included docker-compose.yaml handles most everything else.
 4. Open terminal, then: `docker-compose up -d`
-5. Verify LDAP is functioning `docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org"`  This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
+5. Verify LDAP is functioning 
+```bash
+docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org"
+```  This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
 6. Also, can login to the phpldadmin using a browser enter `localhost:8080`  For login credentials use "Login DN":  
 `cn=admin,dc=example,dc=org` and "password": `admin`
-7. Verify DataStax is working `docker exec dse cqlsh -u cassandra -p cassandra -e "desc keyspaces"`
+7. Verify DataStax is working 
+```bash
+docker exec dse cqlsh -u cassandra -p cassandra -e "desc keyspaces"
+```
 8. Verify hostname on DataStax server `docker exec dse hostname --fqdn`  Expected result is: `dse.example.org` Note:  hostname command is not installed on openldap container so it won't work there but hostname will work on opscenter and phpldapadmin as well as dse.
 9. Add demo tables and keyspace for later testing:
-```
+```bash
 docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/demos/solr_stress/resources/schema/create_table.cql
 ```
 10. Also note, in the home directory for the github repository directory the docker volumes should be created as subdirectories.  To manipulate the dse.yaml file and add the LDAP authentication the local conf subdirectory will be used.  The other dse directories are logs, cache and data.
@@ -31,21 +40,28 @@ docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/demos/solr_stress/re
 ## Enable DSE Advanced Security
 
 The general instructions for starting the DSE Advanced security set up are here:
-https://docs.datastax.com/en/latest-dse/datastax_enterprise/unifiedAuth/configAuthenticate.html
+[https://docs.datastax.com/en/latest-dse/datastax_enterprise/unifiedAuth/configAuthenticate.html](https://docs.datastax.com/en/latest-dse/datastax_enterprise/unifiedAuth/configAuthenticate.html)
 
-This tutorial provides specific commands for this environment, so it shouldn't be necessary to refer to the docs, but they're a handy reference if something goes awry.  Note, the group for LDAP role authentication can be set up using a Directory Group Search or using a member of Group lookup.  The dse.yaml is configured to use both with a one line toggle to change between the two.
+This tutorial provides specific commands for this environment, so it shouldn't be necessary to refer to the docs, but they are a handy reference if something goes awry.  Note, the group for LDAP role authentication can be set up using a Directory Group Search or using a member of Group lookup.  The dse.yaml is configured to use both with a one line toggle to change between the two.
 
 1. Get the IP address of the DataStax and openldap servers by running:
-`export DSE_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dse)`
+```bash
+export DSE_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dse)
+```
    and:
-`export LDAP_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' openldap)`
-   use `echo $DSE_IPE` and `echo $LDAP_IP` to view
+```bash
+export LDAP_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' openldap)
+```
+use `echo $DSE_IPE` and `echo $LDAP_IP` to view
 
-2. Get a local copy of the dse.yaml file from the dse container.  `docker cp dse:/opt/dse/resources/dse/conf/dse.yaml dse.yaml.clean`  or if you prefer use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 5.1.5 and may not work in subsequent versions.  Also provided in the github is a diff file call dse.yaml.diff
+2. Get a local copy of the dse.yaml file from the dse container or use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 5.1.6 and may not work in subsequent versions.  Also provided in the github is a diff file called dse.yaml.diff.   To use github dse.yaml that is already modified, don't run the following command and skip subsequent step 3.  To follow step 3, get the clean dse.yaml file.
+```bash
+docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
+``` 
 
 3. Edit local copy of the dse.yaml being extremely careful to maintain the correct spaces as the yaml is space aware.   Thankfully, any errors are obvious in /var/log/cassandra/system.log on startup failure (~line 56 - 63):
 
-    ```
+    ```yaml
     authentication_options:
     enabled: true
     default_scheme: internal
@@ -59,7 +75,7 @@ This tutorial provides specific commands for this environment, so it shouldn't b
     
     Continue to Edit dse.yaml (~line 76-77):
     
-    ```
+    ```yaml
     role_management_options:
     mode: ldap
     ```

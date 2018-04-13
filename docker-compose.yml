@@ -15,7 +15,7 @@ services:
       - ./opscenter:/var/lib/opscenter
       - ./opscenter-clusters:/opt/opscenter/conf/clusters
   main_node:
-    image: "store/datastax/dse-server:5.1.5"
+    image: "store/datastax/dse-server:5.1.6"
     container_name: "dse"
     hostname: dse
     domainname: example.org
@@ -23,7 +23,6 @@ services:
       - 9042:9042
     environment:
       - DS_LICENSE=accept
-      - CLUSTER_NAME=main
     # Allow DSE to lock memory with mlock
     cap_add:
     - IPC_LOCK
