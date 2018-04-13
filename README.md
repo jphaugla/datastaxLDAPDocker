@@ -25,8 +25,8 @@ git clone https://github.com/jphaugla/datastaxLDAPDocker.git
 docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org"
 ```
 This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
-6. Also, can login to the phpldadmin using a browser enter `localhost:8080`  For login credentials use "Login DN":  
-`cn=admin,dc=example,dc=org` and "password": `admin`
+6. Also, can login to the phpldadmin using a browser enter `localhost:8080`  For login credentials use "Login DN":  `cn=admin,dc=example,dc=org` and "password": `admin`
+
 7. Verify DataStax is working (may take a minute for datastax cassandra to startup so be patient)
 ```bash
 docker exec dse cqlsh -u cassandra -p cassandra -e "desc keyspaces"
@@ -49,15 +49,11 @@ The general instructions for starting the DSE Advanced security set up are here:
 
 This tutorial provides specific commands for this environment, so it shouldn't be necessary to refer to the docs, but they are a handy reference if something goes awry.  Note, the group for LDAP role authentication can be set up using a Directory Group Search or using a member of Group lookup.  The dse.yaml is configured to use both with a one line toggle to change between the two.
 
-
-2. Get a local copy of the dse.yaml file from the dse container or use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 5.1.6 and may not work in subsequent versions.  Also provided in the github is a diff file called dse.yaml.diff.   To use github dse.yaml that is already modified, don't run the following command and skip subsequent step 3.  To follow step 3, get the clean dse.yaml file.
-
+1. Get a local copy of the dse.yaml file from the dse container or use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 5.1.6 and may not work in subsequent versions.  Also provided in the github is a diff file called dse.yaml.diff.   To use github dse.yaml that is already modified, don't run the following command and skip subsequent step 3.  To follow step 3, get the clean dse.yaml file.
 ```bash
 docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
 ``` 
-
-3. Edit local copy of the dse.yaml being extremely careful to maintain the correct spaces as the yaml is space aware.   Thankfully, any errors are obvious in /var/log/cassandra/system.log on startup failure (~line 56 - 63):
-
+2. Edit local copy of the dse.yaml being extremely careful to maintain the correct spaces as the yaml is space aware.  Is easiest to just copy and paste these blocks but otherwise can remove the comments and edit the appropriate values.  Thankfully, any errors are obvious in /var/log/cassandra/system.log on startup failure (~line 56 - 63):
 ```yaml
 authentication_options:
     enabled: true
@@ -70,13 +66,11 @@ authentication_options:
     scheme_permissions: true
 ```
     Continue to Edit dse.yaml (~line 76-77):
-    
 ```yaml
 role_management_options:
     mode: ldap
 ```
     Continue to Edit dse.yaml (~line 94-96):
-    
 ```yaml
 authorization_options:
     enabled: true
