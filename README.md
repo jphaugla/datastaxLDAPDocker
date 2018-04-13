@@ -78,7 +78,7 @@ authorization_options:
 ```
     Continue to Edit dse.yaml using openldap server host below  (~line 124-125):
 ```yaml
- ldap_options:
+ldap_options:
     server_host: openldap
     server_port: 389
     search_dn: cn=admin,dc=example,dc=org
@@ -101,29 +101,6 @@ authorization_options:
         max_active: 2
         max_idle: 2
 ```
-Continue to Edit the dse.yaml (~line 130) by uncommenting the following lines and adding content.  This is the point where a choice can be made between the group search type:
-```yaml
-    server_port: 389
-    search_dn: cn=admin,dc=example,dc=org
-    search_password: admin
-    use_ssl: false
-    use_tls: false
-    truststore_path:
-    truststore_password:
-    truststore_type: jks
-    user_search_base: ou=People,dc=example,dc=org
-    user_search_filter: (uid={0})
-    group_search_type: directory_search
-    #group_search_type: memberof_search
-    group_search_base: ou=Groups,dc=example,dc=org
-    group_search_filter: (uniquemember={0})
-    group_name_attribute: cn
-    credentials_validity_in_ms: 0
-    search_validity_in_seconds: 0
-    connection_pool:
-        max_active: 2
-        max_idle: 2
-```    
 4. Save this edited dse.yaml file to the conf subdirectory and it will be picked up on the next dse restart. `cp dse.yaml conf` For notes on this look here:  [https://github.com/datastax/docker-images/#using-the-dse-conf-volume](https://github.com/datastax/docker-images/#using-the-dse-conf-volume)
 5. Restart the dse docker container: `docker restart dse`
 6. Check logs as you go!  `docker logs dse`
