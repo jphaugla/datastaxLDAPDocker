@@ -23,7 +23,8 @@ git clone https://github.com/jphaugla/datastaxLDAPDocker.git
 5. Verify LDAP is functioning 
 ```bash
 docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org"
-```  This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
+```
+This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
 6. Also, can login to the phpldadmin using a browser enter `localhost:8080`  For login credentials use "Login DN":  
 `cn=admin,dc=example,dc=org` and "password": `admin`
 7. Verify DataStax is working 
@@ -82,7 +83,7 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
     
     Continue to Edit dse.yaml (~line 94-96):
     
-    ```
+    ```yaml
     authorization_options:
     enabled: true
     transitional_mode: disabled
@@ -90,14 +91,14 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
     
     Continue to Edit dse.yaml using the $LDAP_ID retrieved in Step 1 as the IP Address for the server host below  (~line 124-125):
     
-    ```
+    ```yaml
  ldap_options:
     server_host: 172.20.0.3
     ```
     
     Continue to Edit the dse.yaml (~line 130) by uncommenting the following lines and adding content.  This is the point where a choice can be made between the group search type:
     
-    ```
+    ```yaml
     server_port: 389
     search_dn: cn=admin,dc=example,dc=org
     search_password: admin
@@ -119,49 +120,57 @@ docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
         max_active: 2
         max_idle: 2
     ```    
-4. Save this edited dse.yaml file to the conf subdirectory and it will be picked up on the next dse restart.  Simplest is just do `cp dse.yaml conf` For notes on this look here:  [https://github.com/datastax/docker-images/#using-the-dse-conf-volume]()
+4. Save this edited dse.yaml file to the conf subdirectory and it will be picked up on the next dse restart. `cp dse.yaml conf` For notes on this look here:  [https://github.com/datastax/docker-images/#using-the-dse-conf-volume](https://github.com/datastax/docker-images/#using-the-dse-conf-volume)
 5. Restart the dse docker container: `docker restart dse`
 6. Check logs as you go!  `docker logs dse`
 7. To allow for memberof_search search type, enable memberof for the ldap server.
-    ```
+    ```bash
     docker cp memberof2.ldif openldap:/root
     docker exec openldap ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /root/memberof2.ldif`    
     ```
 8. Add an LDAP user by copying the ldif file to the container and then running ldapadd.  This adds the directory_search style group killrdevs for ldap 
-`docker cp add_kennedy.ldif openldap:/root`
-`docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_kennedy.ldif`
+```bash
+docker cp add_kennedy.ldif openldap:/root;
+docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_kennedy.ldif
+```
 9. Do an LDAP Search to see the new user:
 
-    ```
+    ```bash
     docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org" -H ldap://openldap    
     ```
  10. Additional users can be added using ldif file such as provided add_matt.ldif using a similar ldapadd command as in step 7 above.
  11. To instead set up memberof_search, add a member to a group.
-    ```
+    ```bash
     docker cp add_john_doe.ldif openldap:/root
     docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_john_doe.ldif
     ``` 
  12. Use an ldapsearch to ensure member of is set
- `docker exec openldap ldapsearch -x -LLL -w admin -D cn=admin,dc=example,dc=org -H ldap:/// -b dc=example,dc=org memberof`
+```bash
+docker exec openldap ldapsearch -x -LLL -w admin -D cn=admin,dc=example,dc=org -H ldap:/// -b dc=example,dc=org memberof
+```
 
 ## Configure DSERoleManager to Enable DSE + LDAP Roles
 
 
 1.  Create killrdevs cassandra role:
 
-    ```
-    docker cp killrdevs.cql dse:/opt/dse
+    ```bash
+    docker cp killrdevs.cql dse:/opt/dse;
     docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/killrdevs.cql
     ```  
-2. Finally, log in as the *kennedy* user successfully  : `docker exec dse cqlsh -u kennedy -p tinkerbell -e "select * from demo.solr"`
+2. Finally, log in as the *kennedy* user successfully  : 
+```bash
+docker exec dse cqlsh -u kennedy -p tinkerbell -e "select * from demo.solr"
+```
 3. For memberof_search create mygroup cassandra role:
-  ```
-    docker cp mygroup.cql dse:/opt/dse
+  ```bash
+    docker cp mygroup.cql dse:/opt/dse;
     docker exec dse cqlsh -u cassandra -p cassandra -f /opt/dse/mygroup.cql
     ``` 
-4. Log in as the *john* user successfully  : `docker exec dse cqlsh -u john -p public -e "select * from demo.solr"`
+4. Log in as the *john* user successfully  : 
+```bash
+docker exec dse cqlsh -u john -p public -e "select * from demo.solr"
+```
 
 ## Conclusion
 At this point, DSE and LDAP are connected such that user management is much easier than it has been before. We can use internal Cassandra auth for the app-tier or for dev/test users that really have no business in an LDAP. LDAP can be used for real human user's accounts using any groups that an individual belongs to, or that have been created for use with DSE. The only additional overhead that the DSE admin has is to create a role name matching an LDAP group assignment and to assign appropriate permissions to that role. This results in a far more manageable permissions catalog inside of DSE as compared to releases prior to 5.0.
-
-
