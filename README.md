@@ -48,7 +48,7 @@ The general instructions for starting the DSE Advanced security set up are here:
 
 This tutorial provides specific commands for this environment, so it shouldn't be necessary to refer to the docs, but they are a handy reference if something goes awry.  Note, the group for LDAP role authentication can be set up using a Directory Group Search or using a member of Group lookup.  The dse.yaml is configured to use both with a one line toggle to change between the two.
 
-1. Get a local copy of the dse.yaml file from the dse container or use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 6.0.0 and may not work in subsequent versions.  Also provided in the github is a diff file called dse.yaml.diff.   To use github dse.yaml that is already modified, don't run the following command and skip subsequent step 3.  To follow step 3, get the clean dse.yaml file.
+1. Get a local copy of the dse.yaml file from the dse container or use the existing dse.yaml provided in the github.  However, this existing dse.yaml is for 6.0.0 and may not work in subsequent versions.  Also provided in the github is a diff file called dse.yaml.diff.   To use github dse.yaml that is already modified, don't run the following command and skip subsequent step 2.  To follow step 2, get the clean dse.yaml file.
 ```bash
 docker cp dse:/opt/dse/resources/dse/conf/dse.yaml .
 ``` 
@@ -101,30 +101,30 @@ ldap_options:
         max_active: 2
         max_idle: 2
 ```
-4. Save this edited dse.yaml file to the conf subdirectory and it will be picked up on the next dse restart. `cp dse.yaml conf` For notes on this look here:  [https://github.com/datastax/docker-images/#using-the-dse-conf-volume](https://github.com/datastax/docker-images/#using-the-dse-conf-volume)
-5. Restart the dse docker container: `docker restart dse`
-6. Check logs as you go!  `docker logs dse`
-7. To allow for memberof_search search type, enable memberof for the ldap server.
+3. Save this edited dse.yaml file to the conf subdirectory and it will be picked up on the next dse restart. `cp dse.yaml conf` For notes on this look here:  [https://github.com/datastax/docker-images/#using-the-dse-conf-volume](https://github.com/datastax/docker-images/#using-the-dse-conf-volume)
+4. Restart the dse docker container: `docker restart dse`
+5. Check logs as you go!  `docker logs dse`
+6. To allow for memberof_search search type, enable memberof for the ldap server.
 ```bash
 docker cp memberof2.ldif openldap:/root;
 docker exec openldap ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /root/memberof2.ldif
 ```
-8. Add an LDAP user by copying the ldif file to the container and then running ldapadd.  This adds the directory_search style group killrdevs for ldap 
+7. Add an LDAP user by copying the ldif file to the container and then running ldapadd.  This adds the directory_search style group killrdevs for ldap 
 ```bash
 docker cp add_kennedy.ldif openldap:/root;
 docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_kennedy.ldif
 ```
-9. Do an LDAP Search to see the new user:
+8. Do an LDAP Search to see the new user:
 ```bash
     docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org" -H ldap://openldap    
 ```
- 10. Additional users can be added using ldif file such as provided add_matt.ldif using a similar ldapadd command as in step 7 above.
- 11. To instead set up memberof_search, add a member to a group.
+9. Additional users can be added using ldif file such as provided add_matt.ldif using a similar ldapadd command as in step 7 above.
+10. To instead set up memberof_search, add a member to a group.
 ```bash
     docker cp add_john_doe.ldif openldap:/root
     docker exec openldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin -f /root/add_john_doe.ldif
 ``` 
- 12. Use an ldapsearch to ensure member of is set
+11. Use an ldapsearch to ensure member of is set
 ```bash
 docker exec openldap ldapsearch -x -LLL -w admin -D cn=admin,dc=example,dc=org -H ldap:/// -b dc=example,dc=org memberof
 ```
