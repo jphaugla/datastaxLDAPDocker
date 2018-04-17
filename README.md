@@ -25,8 +25,7 @@ git clone https://github.com/jphaugla/datastaxLDAPDocker.git
 docker exec openldap ldapsearch -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org"
 ```
 This should return success (careful with this command as ldapsearch is very exacting and is confused by spaces or other slight changes in syntax.
-6. Also, can login to the phpldadmin using a browser enter [localhost:8080](localhost:8080)  For login credentials use "Login DN":  `cn=admin,dc=example,dc=org` and "password": `admin`
-
+6. Also, can login to the phpldadmin using a browser enter [http://localhost:8080](http://localhost:8080)  For login credentials use "Login DN":  `cn=admin,dc=example,dc=org` and "password": `admin`
 7. Verify DataStax is working (may take a minute for datastax cassandra to startup so be patient)
 ```bash
 docker exec dse cqlsh dse -u cassandra -p cassandra -e "desc keyspaces"
@@ -70,7 +69,7 @@ authentication_options:
 role_management_options:
     mode: ldap
 ```
-    Continue to Edit dse.yaml (~line 94-96):
+    Continue to Edit dse.yaml (~line 110-112):
 ```yaml
 authorization_options:
     enabled: true
@@ -156,7 +155,7 @@ docker exec dse cqlsh dse -u john -p public -e "select * from demo.solr"
     #group_search_type: directory_search
     group_search_type: memberof_search
 ```
-6.  Restart dse with `docker restart dse` and rereun steps 2 and 4.  Now john and kennedy will both be successfulu.
+6.  Restart dse with `docker restart dse` and rerun steps 2 and 4.  Now john and kennedy will both be successfulu.
 
 ## Conclusion
 At this point, DSE and LDAP are connected such that user management is much easier than it has been before. We can use internal Cassandra auth for the app-tier or for dev/test users that really have no business in an LDAP. LDAP can be used for real human user's accounts using any groups that an individual belongs to, or that have been created for use with DSE. The only additional overhead that the DSE admin has is to create a role name matching an LDAP group assignment and to assign appropriate permissions to that role. This results in a far more manageable permissions catalog inside of DSE as compared to releases prior to 5.0.

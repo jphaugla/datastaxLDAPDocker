@@ -1,63 +1,67 @@
-56,63c56,64
+64,71c64,72
 < # authentication_options:
 < #     enabled: false
 < #     default_scheme: internal
+< #     other_schemes:
+< #     scheme_permissions: false
 < #     allow_digest_with_kerberos: true
 < #     plain_text_without_ssl: warn
 < #     transitional_mode: disabled
-< #     other_schemes:
-< #     scheme_permissions: false
 ---
 > authentication_options:
 >     enabled: true
 >     default_scheme: internal
->     allow_digest_with_kerberos: true
->     plain_text_without_ssl: warn
->     transitional_mode: disabled
 >     other_schemes:
 >       - ldap
 >     scheme_permissions: true
-76,77c77,78
+>     allow_digest_with_kerberos: true
+>     plain_text_without_ssl: warn
+>     transitional_mode: disabled
+84,85c85,86
 < # role_management_options:
 < #     mode: internal
 ---
 > role_management_options:
 >     mode: ldap
-94,96c95,97
+109,112c110,113
 < # authorization_options:
 < #     enabled: false
 < #     transitional_mode: disabled
+< #     allow_row_level_security: false
 ---
 > authorization_options:
 >     enabled: true
 >     transitional_mode: disabled
-124,125c125,126
+>     allow_row_level_security: false
+149c150
 < # ldap_options:
-< #     server_host:
 ---
 > ldap_options:
->     server_host: 172.20.0.3
-130c131
+152c153
+< #     server_host:
+---
+>     server_host: openldap
+157c158
 < #     server_port: 389
 ---
 >     server_port: 389
-135c136
+162c163
 < #     search_dn:
 ---
 >     search_dn: cn=admin,dc=example,dc=org
-138c139
+165c166
 < #     search_password:
 ---
 >     search_password: admin
-142c143
+169c170
 < #     use_ssl: false
 ---
 >     use_ssl: false
-145c146
+172c173
 < #     use_tls: false
 ---
 >     use_tls: false
-147,151c148,152
+174,178c175,179
 < #     truststore_path:
 < #     truststore_password:
 < #     truststore_type: jks
@@ -69,27 +73,27 @@
 >     truststore_type: jks
 >     user_search_base: ou=People,dc=example,dc=org
 >     user_search_filter: (uid={0})
-162,164c163,165
+189,191c190,192
 < #     group_search_type: directory_search
 < #     group_search_base:
 < #     group_search_filter: (uniquemember={0})
 ---
->     group_search_type: directory_search
+>     group_search_type: memberof_search
 >     group_search_base: ou=Groups,dc=example,dc=org
 >     group_search_filter: (uniquemember={0})
-167c168
+194c195
 < #     group_name_attribute: cn
 ---
 >     group_name_attribute: cn
-171c172
+198c199
 < #     credentials_validity_in_ms: 0
 ---
 >     credentials_validity_in_ms: 0
-174c175
+201c202
 < #     search_validity_in_seconds: 0
 ---
 >     search_validity_in_seconds: 0
-176,178c177,179
+203,205c204,206
 < #     connection_pool:
 < #         max_active: 8
 < #         max_idle: 8
